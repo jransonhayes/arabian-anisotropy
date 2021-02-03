@@ -2,11 +2,8 @@ import numpy as np
 import pandas as pd
 from matplotlib import pyplot as plt
 from scipy.stats import norm, halfnorm
-from glob import glob
-from io import StringIO
 
 PERIODS = [5, 8, 10, 18, 25, 36, 46, 55, 70]
-# PERIODS = (5,)
 
 
 def read_raw_file(period):
@@ -47,27 +44,16 @@ def generate_station_file():
     data.to_csv('data/stations.csv')
 
 
-def generate_tomo_file(period, station_nums, so=False):
+def generate_tomo_file(period, station_nums):
     df = read_raw_file(period)
     output = ""
 
-    if so:
-        so = trim_so(0.4)
-
-        for row in df.itertuples():
-            if f"z{row[0] + 1}" in so:
-                seg = f"z{row[0] + 1} path_{station_nums[row[7]]}_{station_nums[row[8]]} \n"
-                seg += f"{row[1]} {row[2]} {row[3]} {row[4]} \n"
-                seg += f"{row[5]} \n"
-                seg += f"{row[6]} \n"
-                output += seg
-    else:
-        for row in df.itertuples():
-            seg = f"z{row[0] + 1} path_{station_nums[row[7]]}_{station_nums[row[8]]} \n"
-            seg += f"{row[1]} {row[2]} {row[3]} {row[4]} \n"
-            seg += f"{row[5]} \n"
-            seg += f"{row[6]} \n"
-            output += seg
+    for row in df.itertuples():
+        seg = f"z{row[0] + 1} path_{station_nums[row[7]]}_{station_nums[row[8]]} \n"
+        seg += f"{row[1]} {row[2]} {row[3]} {row[4]} \n"
+        seg += f"{row[5]} \n"
+        seg += f"{row[6]} \n"
+        output += seg
 
     with open(f'clean/intomo_{period}.rayl', 'w') as f:
         print(f"Printing to 'clean/intomo_{period}.rayl'")
@@ -119,56 +105,6 @@ def plot_hist():
     plt.show()
 
     return
-
-
-def read_so():
-    so = glob('data/so_*')
-
-    with open(so[0], 'r') as f:
-        so = f.read()
-
-    data = so.split('couche):\n')[1].split('moyenne')[0]
-
-    data = data.split()
-    # the formatting in the so file is atrocious: the length of the path code subtracts from the characters used to
-    # render the word 'path', so it is not possible to split simply on whitespace.
-    data = [i for i in data if i[0] != 'p']
-
-    clean_data = []
-    for i in range(len(data) // 2):
-        a = data[2 * i]
-        b = data[2 * i + 1]
-        clean_data.append([a, float(b)])
-
-    clean_data = pd.DataFrame(clean_data).set_index(0)
-    clean_data.columns = ['Error']
-    return clean_data
-
-
-def trim_so(level):
-    df = read_so()
-
-    select = df[df.Error <= level]
-    print(f"{100 * (1 - len(select) / len(df)):.1f}% of data excluded")
-    return select.index.to_list()
-
-
-def post_tomo_hist():
-    data = read_so()
-
-    fig, ax = plt.subplots()
-    nbins = 70
-    n, bins, patches = ax.hist(data, bins=nbins)
-    mu, sigma = halfnorm.fit(data.to_numpy())
-    # x=np.linspace(0.001,.99, 100)
-    # ax.plot(x,halfnorm.pdf(x, mu, sigma), linewidth=0.8, linestyle='--')
-    # y = ((1 / (np.sqrt(2 * np.pi) * sigma)) * np.exp(-0.5 * (1 / sigma * (bins - mu)) ** 2))
-    # ax.plot(bins, y)
-
-    ax.set_title(f'Post-tomo Error Histogram - {nbins} bins')
-    ax.set_xlabel('Error')
-    ax.set_ylabel('Count')
-    plt.show()
 
 
 def trim_nsig(period, n=2):

@@ -1,9 +1,7 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 import cartopy.crs as ccrs
-import cartopy.feature as cfeature
 import numpy as np
-import geopandas as gpd
 from glob import glob
 
 
@@ -33,7 +31,7 @@ def vector_prepare(df):
 
 def main():
     files = glob('data/xyz/*.xyz')
-    stations = pd.read_csv('data/stations.csv', index_col=0)
+    # stations = pd.read_csv('data/stations.csv', index_col=0)
 
     # pi anisotropy
     ans_2v = pd.read_csv(files[2], header=None, delim_whitespace=True,
