@@ -6,22 +6,34 @@ from glob import glob
 
 
 class Settings:
-    def __init__(self, mode):
+    def __init__(self, mode, period=None, extra=None):
+        """
+        :param mode: ('synth iso', 'synth-aniso', 'final')
+        """
         if mode == 'synth-iso':
             self.skip = 2
             self.scale = 7
             self.draw_iso = True
-            self.draw_aniso = False
+            self.draw_aniso = True
+            self.title = f'Synthetic Isotropic Velocity Test: {period}s'
         elif mode == 'synth-aniso':
             self.skip = 2
-            self.scale = 7
-            self.draw_iso = False
+            self.scale = 7  # 7
+            self.draw_iso = True
             self.draw_aniso = True
+            self.title = 'Synthetic Anisotropy Test'
+
+            if period:
+                self.title += f": {period}s"
         elif mode == 'final':
             self.skip = 1
             self.scale = 2.54
             self.draw_iso = True
             self.draw_aniso = True
+            self.title = f'Period: {period}s'
+
+            if extra:
+                self.title += ", " + extra
         else:
             raise ValueError
 
@@ -36,6 +48,7 @@ def scalar_prepare(df):
 
 
 def vector_prepare(df):
+    df = df[df.Strength > 0]  # remove 0 vectors
     X = df.Longitude.to_numpy()
     Y = df.Latitude.to_numpy()
 
@@ -51,7 +64,7 @@ def vector_prepare(df):
 
 
 def main():
-    settings = Settings('synth-aniso')
+    settings = Settings('final', 10)
 
     def plot_iso():
         path = glob('data/xyz/*_v_*.xyz')[0]
@@ -85,7 +98,7 @@ def main():
     proj = ccrs.PlateCarree()
     fig = plt.figure(figsize=(13, 10))
     ax = fig.add_subplot(1, 1, 1, projection=proj)
-    plt.title('Anisotropy of the Arabian Plate')
+    plt.title(settings.title)
     # boundingbox = (49, 60, 21.5, 28.5)  # (x0, x1, y0, y1)
     boundingbox = [15, 75, 2, 55]  # (x0, x1, y0, y1)
 
