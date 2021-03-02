@@ -15,7 +15,11 @@ class Settings:
             self.scale = 7
             self.draw_iso = True
             self.draw_aniso = True
-            self.title = f'Synthetic Isotropic Velocity Test: {period}s'
+            self.title = f'Synthetic Isotropic Velocity Test'
+
+            if period:
+                self.title += f': {period}s'
+
         elif mode == 'synth-aniso':
             self.skip = 2
             self.scale = 7  # 7
@@ -25,8 +29,9 @@ class Settings:
 
             if period:
                 self.title += f": {period}s"
+
         elif mode == 'final':
-            self.skip = 1
+            self.skip = 2
             self.scale = 2.54
             self.draw_iso = True
             self.draw_aniso = True
@@ -48,7 +53,7 @@ def scalar_prepare(df):
 
 
 def vector_prepare(df):
-    df = df[df.Strength > 0]  # remove 0 vectors
+    df = df[df.Strength > 0.1]  # remove 0 vectors
     X = df.Longitude.to_numpy()
     Y = df.Latitude.to_numpy()
 
@@ -64,13 +69,13 @@ def vector_prepare(df):
 
 
 def main():
-    settings = Settings('final', 10)
+    settings = Settings('synth-iso')
 
     def plot_iso():
         path = glob('data/xyz/*_v_*.xyz')[0]
         iso_v = pd.read_csv(path, header=None, delim_whitespace=True, names=['Latitude', 'Longitude', 'Strength'])
         iso_v = scalar_prepare(iso_v)
-        filled_c = ax.contourf(*iso_v, 200, transform=proj, cmap='seismic_r')
+        filled_c = ax.contourf(*iso_v, 200, transform=ccrs.PlateCarree(), cmap='seismic_r')
         return filled_c
 
     def plot_aniso():
@@ -80,12 +85,17 @@ def main():
                              names=['Latitude', 'Longitude', 'Azimuth', 'Strength'])
         ans_2v = vector_prepare(ans_2v)
 
+        if not ans_2v.size:
+            return None, None
+
         skip = slice(None, None, settings.skip)
         ans_2v = ans_2v[:, skip]  # reduce vector density
 
-        aniso = ax.quiver(*ans_2v, transform=proj, pivot='mid', headlength=0, headaxislength=0, units='inches',
+        aniso = ax.quiver(*ans_2v, transform=ccrs.PlateCarree(), pivot='mid', headlength=0, headaxislength=0,
+                          units='inches',
                           scale=settings.scale,  # 2.54 for 1 cm : 100 %
-                          scale_units='inches')
+                          scale_units='inches',
+                          width=0.03)
         quivkey = ax.quiverkey(aniso, X=0.5, Y=-0.1, U=1, label='2% peak-to-peak anisotropy')
         return aniso, quivkey
 
@@ -95,14 +105,15 @@ def main():
 
     # isotropic speed
 
-    proj = ccrs.PlateCarree()
+    boundingbox = [30, 65, 8, 50]  # (x0, x1, y0, y1)
+    proj = ccrs.LambertConformal(central_longitude=(boundingbox[0] + (boundingbox[1] - boundingbox[0]) / 2),
+                                 central_latitude=(boundingbox[2] + (boundingbox[3] - boundingbox[2]) / 2))
     fig = plt.figure(figsize=(13, 10))
     ax = fig.add_subplot(1, 1, 1, projection=proj)
     plt.title(settings.title)
     # boundingbox = (49, 60, 21.5, 28.5)  # (x0, x1, y0, y1)
-    boundingbox = [15, 75, 2, 55]  # (x0, x1, y0, y1)
 
-    ax.set_extent(boundingbox)
+    ax.set_extent(boundingbox, crs=ccrs.PlateCarree())
 
     if settings.draw_iso:
         filled_c = plot_iso()
