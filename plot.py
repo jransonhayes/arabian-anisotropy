@@ -69,7 +69,7 @@ def vector_prepare(df):
 
 
 def main():
-    settings = Settings('synth-iso')
+    settings = Settings('synth-aniso')
 
     def plot_iso():
         path = glob('data/xyz/*_v_*.xyz')[0]
@@ -107,7 +107,8 @@ def main():
 
     boundingbox = [30, 65, 8, 50]  # (x0, x1, y0, y1)
     proj = ccrs.LambertConformal(central_longitude=(boundingbox[0] + (boundingbox[1] - boundingbox[0]) / 2),
-                                 central_latitude=(boundingbox[2] + (boundingbox[3] - boundingbox[2]) / 2))
+                                 central_latitude=(boundingbox[2] + (boundingbox[3] - boundingbox[2]) / 2),
+                                 standard_parallels=(15, 40))
     fig = plt.figure(figsize=(13, 10))
     ax = fig.add_subplot(1, 1, 1, projection=proj)
     plt.title(settings.title)
@@ -117,6 +118,8 @@ def main():
 
     if settings.draw_iso:
         filled_c = plot_iso()
+
+        # filled_c.set_clim(2.05, 3.85) # use constant colorbar range
 
         cax = fig.add_axes([ax.get_position().x1 + 0.05, ax.get_position().y0, 0.02, ax.get_position().height])
         fig.colorbar(filled_c, orientation='vertical', cax=cax)
@@ -130,6 +133,7 @@ def main():
     # sta = ax.scatter(stations.Longitude, stations.Latitude)
     ax.coastlines()
     ax.gridlines(draw_labels=True)
+
     # ax.add_feature(cfeature.LAND)
     # ax.add_feature(cfeature.OCEAN)
     # ax.stock_img()

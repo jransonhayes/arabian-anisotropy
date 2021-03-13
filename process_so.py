@@ -30,15 +30,18 @@ def read_so(so=None):
     return clean_data
 
 
-def trim_so(level):
-    df = read_so()
+def trim_so(level, so=None):
+    if so is None:
+        df = read_so()
+    else:
+        df = so
 
     select = df[df.Error <= level]
     print(f"{100 * (1 - len(select) / len(df)):.1f}% of data excluded")
     return select.index.to_list()
 
 
-def post_tomo_hist(so=None):
+def post_tomo_hist(period, level, so=None):
     data = read_so(so)
 
     fig, ax = plt.subplots()
@@ -49,26 +52,27 @@ def post_tomo_hist(so=None):
     # ax.plot(x,halfnorm.pdf(x, mu, sigma), linewidth=0.8, linestyle='--')
     # y = ((1 / (np.sqrt(2 * np.pi) * sigma)) * np.exp(-0.5 * (1 / sigma * (bins - mu)) ** 2))
     # ax.plot(bins, y)
+    plt.axvline(level)
 
-    ax.set_title(f'Post-tomo Error Histogram - {nbins} bins')
+    ax.set_title(f'Post-tomo Error Histogram - {nbins} bins - {period}s')
     ax.set_xlabel('Error')
     ax.set_ylabel('Count')
     plt.show()
 
 
-def main(period):
+def main(period, level):
     so_path = f"data/so/so_{period}_75_UAE"
     rayl = f"clean/intomo_{period}.rayl"
 
     # plot the distribution of errors after tomographic inversion
-    post_tomo_hist(so_path)
+    post_tomo_hist(period, level, so_path)
     # read so file into DataFrame
     so_data = read_so(so_path)
     # read raypaths into DataFrame
     raypaths = read_raw_file(period)
 
     # find raypaths to be kept after trimming
-    trimmed_so = trim_so(1.0)
+    trimmed_so = trim_so(level, so_data)
 
     # import and enumerate stations
     stations = pd.read_csv('data/stations.csv', index_col=0)
@@ -92,4 +96,6 @@ def main(period):
 
 
 if __name__ == "__main__":
-    main(18)
+    # for period, level in zip([10, 18, 25, 36, 46, 55, 70], [1, 1, 1.1, 1.3, 1.2, 0.8, 0.7]):
+    #     main(period, level)
+    main(70, 1.5)

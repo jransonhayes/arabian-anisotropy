@@ -92,8 +92,9 @@ def plot(*args):
 
 
 def main():
-    for period in [10, 18, 25, 36, 46, 55, 70]:
-        plot(period, 'final')
+    # for period in [10, 18, 25, 36, 46, 55, 70]:
+    #     plot(period, 'synth-iso')
+    plot(55, 'final')
 
 
 if __name__ == '__main__':
