@@ -96,6 +96,6 @@ def main(period, level):
 
 
 if __name__ == "__main__":
-    # for period, level in zip([10, 18, 25, 36, 46, 55, 70], [1, 1, 1.1, 1.3, 1.2, 0.8, 0.7]):
-    #     main(period, level)
-    main(70, 1.5)
+    for period, level in zip([10, 18, 25, 36, 46, 55, 70], [1, 1, 1.1, 1.3, 1.2, 0.8, 0.7]):
+        main(period, level)
+

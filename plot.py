@@ -69,7 +69,7 @@ def vector_prepare(df):
 
 
 def main():
-    settings = Settings('synth-aniso')
+    settings = Settings('synth-iso')
 
     def plot_iso():
         path = glob('data/xyz/*_v_*.xyz')[0]
@@ -109,7 +109,7 @@ def main():
     proj = ccrs.LambertConformal(central_longitude=(boundingbox[0] + (boundingbox[1] - boundingbox[0]) / 2),
                                  central_latitude=(boundingbox[2] + (boundingbox[3] - boundingbox[2]) / 2),
                                  standard_parallels=(15, 40))
-    fig = plt.figure(figsize=(13, 10))
+    fig = plt.figure(figsize=(6, 4))
     ax = fig.add_subplot(1, 1, 1, projection=proj)
     plt.title(settings.title)
     # boundingbox = (49, 60, 21.5, 28.5)  # (x0, x1, y0, y1)
@@ -138,7 +138,7 @@ def main():
     # ax.add_feature(cfeature.OCEAN)
     # ax.stock_img()
     # ax.set_global()
-
+    fig.tight_layout()
     plt.show()
 
 

@@ -12,6 +12,7 @@ import os
 def plot(*args):
     period = args[0]
     mode = args[1]
+    ax = args[2]
     settings = Settings(mode, period)
 
     if mode == 'final':
@@ -25,7 +26,7 @@ def plot(*args):
 
     def plot_iso(path):
         path = glob(path + '*_v_*.xyz')[0]
-        iso_v = pd.read_csv(path, header=None, delim_whitespace=True, names=['Latitude', 'Longitude', 'Strength'])
+        iso_v = pd.read_csv(path, header=None, delim_whitespace=True, names=['Latitude', 'Longitude', 'Strength']).sample(10)
         iso_v = scalar_prepare(iso_v)
         filled_c = ax.contourf(*iso_v, 200, transform=ccrs.PlateCarree(), cmap='seismic_r')
         return filled_c
@@ -60,9 +61,7 @@ def plot(*args):
     boundingbox = [30, 65, 8, 50]  # (x0, x1, y0, y1)
     proj = ccrs.LambertConformal(central_longitude=(boundingbox[0] + (boundingbox[1] - boundingbox[0]) / 2),
                                  central_latitude=(boundingbox[2] + (boundingbox[3] - boundingbox[2]) / 2))
-    fig = plt.figure(figsize=(13, 10))
-    ax = fig.add_subplot(1, 1, 1, projection=proj)
-    plt.title(settings.title)
+    ax.set_title(settings.title)
     # boundingbox = (49, 60, 21.5, 28.5)  # (x0, x1, y0, y1)
 
     ax.set_extent(boundingbox, crs=ccrs.PlateCarree())
@@ -70,7 +69,7 @@ def plot(*args):
     if settings.draw_iso:
         filled_c = plot_iso(path)
 
-        cax = fig.add_axes([ax.get_position().x1 + 0.05, ax.get_position().y0, 0.02, ax.get_position().height])
+        cax = fig.add_axes([ax.get_position().x1 + 0.03, ax.get_position().y0, 0.01, 1.1*ax.get_position().height])
         fig.colorbar(filled_c, orientation='vertical', cax=cax)
 
     if settings.draw_aniso:
@@ -88,14 +87,23 @@ def plot(*args):
     # ax.set_global()
 
     # plt.show()
-    plt.savefig(path + str(mode))
-
-
-def main():
-    # for period in [10, 18, 25, 36, 46, 55, 70]:
-    #     plot(period, 'final')
-    plot(18, 'final')
 
 
 if __name__ == '__main__':
-    main()
+    boundingbox = [30, 65, 8, 50]  # (x0, x1, y0, y1)
+    proj = ccrs.LambertConformal(central_longitude=(boundingbox[0] + (boundingbox[1] - boundingbox[0]) / 2),
+                                 central_latitude=(boundingbox[2] + (boundingbox[3] - boundingbox[2]) / 2))
+
+    fig, axs = plt.subplots(nrows=1, ncols=2, sharex=True, sharey=True, subplot_kw={'projection': proj},
+                            figsize=(6.25, 3.25), squeeze=True)
+
+
+
+
+    for period, ax in zip([10, 18], axs.ravel()):
+        plot(period, 'final', ax)
+
+    # fig.subplots_adjust(wspace=1)
+    fig.tight_layout()
+
+    plt.show()
